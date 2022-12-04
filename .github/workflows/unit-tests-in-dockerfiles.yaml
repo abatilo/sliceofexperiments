@@ -1,0 +1,36 @@
+name: Unit tests in Dockerfiles
+on: push
+
+jobs:
+  method1:
+    name: Run unit tests on CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - uses: actions/actions-poetry@v2
+        with:
+          poetry-version: '1.2.2'
+      - working-directory: unit-tests-in-dockerfiles/method1
+        run: |
+          python -m unittest test_string_rev
+
+  method2:
+    name: Pre-build image
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 0
+
+  method3:
+    name: Run tests in Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 0
+
+  method4:
+    name: Multi-stage docker build
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 0
