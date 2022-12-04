@@ -15,6 +15,7 @@ jobs:
       - working-directory: unit-tests-in-dockerfiles/method1
         run: |
           python -m unittest test_string_rev
+          docker build .
 
   method2:
     name: Pre-build image
