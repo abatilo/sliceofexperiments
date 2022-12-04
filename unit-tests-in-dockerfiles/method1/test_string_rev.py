@@ -1,8 +1,6 @@
 import unittest
 
-
-def rev(s):
-    return s[::-1]
+from main import rev
 
 
 class Test(unittest.TestCase):
