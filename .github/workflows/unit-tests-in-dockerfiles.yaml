@@ -20,8 +20,12 @@ jobs:
   method2:
     name: Pre-build image
     runs-on: ubuntu-latest
+    container: python:3.10
     steps:
-      - run: exit 0
+      - uses: actions/checkout@v3
+      - working-directory: unit-tests-in-dockerfiles/method2
+        run: |
+          python -m unittest test_string_rev
 
   method3:
     name: Run tests in Dockerfile
