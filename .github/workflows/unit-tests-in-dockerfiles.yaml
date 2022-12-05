@@ -31,10 +31,20 @@ jobs:
     name: Run tests in Dockerfile
     runs-on: ubuntu-latest
     steps:
-      - run: exit 0
+      - uses: actions/checkout@v3
+      - working-directory: unit-tests-in-dockerfiles/method3
+        run: |
+          docker build .
 
   method4:
     name: Multi-stage docker build
     runs-on: ubuntu-latest
     steps:
-      - run: exit 0
+      - uses: actions/checkout@v3
+      - working-directory: unit-tests-in-dockerfiles/method4
+        run: |
+          cat <<EOF > test_commands
+          python -m unittest test_string_rev
+          EOF
+          docker build --tag ci --target test-target .
+          docker run --rm --interactive --tty ci bash -c "$(cat test_commands)"
