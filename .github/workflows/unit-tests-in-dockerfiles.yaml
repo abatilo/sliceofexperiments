@@ -47,4 +47,4 @@ jobs:
           python -m unittest test_string_rev
           EOF
           docker build --tag ci --target test-target .
-          docker run --rm --interactive --tty ci bash -c "$(cat test_commands)"
+          docker run --rm --interactive ci bash -c "$(cat test_commands)"
