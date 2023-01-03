@@ -1,0 +1,82 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: remote-buildkit-agent
+  labels:
+    app: remote-buildkit-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: remote-buildkit-agent
+  template:
+    metadata:
+      labels:
+        app: remote-buildkit-agent
+    spec:
+      containers:
+        - name: buildkitd
+          image: moby/buildkit:buildx-stable-1
+          volumeMounts:
+            - name: config
+              mountPath: /etc/buildkit
+            - name: var-lib-buildkit
+              mountPath: /var/lib/buildkit
+          readinessProbe:
+            exec:
+              command:
+                - "buildctl"
+                - "debug"
+                - "workers"
+          securityContext:
+            privileged: true
+      volumes:
+        - name: config
+          configMap:
+            name: remote-buildkit-agent
+        - name: var-lib-buildkit
+          persistentVolumeClaim:
+            claimName: remote-buildkit-agent
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: remote-buildkit-agent
+data:
+  buildkitd.toml: |
+    root = "/var/lib/buildkit"
+
+    [worker]
+
+    [worker.containerd]
+      enabled = false
+
+    [worker.oci]
+      enabled = true
+      gc = true
+      gckeepstorage = 30000000000
+      snapshotter = "overlayfs"
+
+      [[worker.oci.gcpolicy]]
+        filters = ["type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
+        keepBytes = 10240000000
+        keepDuration = 604800
+
+      [[worker.oci.gcpolicy]]
+        keepBytes = 30000000000
+
+      [[worker.oci.gcpolicy]]
+        all = true
+        keepBytes = 30000000000
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: remote-buildkit-agent
+spec:
+  resources:
+    requests:
+      storage: "50Gi"
+  accessModes:
+    - "ReadWriteOnce"

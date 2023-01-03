@@ -1,0 +1,13 @@
+{
+  "Name": "remote-buildkit-agent",
+  "Driver": "kubernetes",
+  "Nodes": [
+    {
+      "Name": "remote-buildkit-agent",
+      "Endpoint": "kubernetes:///remote-buildkit-agent?deployment=&kubeconfig=",
+      "DriverOpts": {
+        "namespace": "default"
+      }
+    }
+  ]
+}
