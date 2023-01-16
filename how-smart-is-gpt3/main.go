@@ -36,7 +36,28 @@ func main() {
 	defer db.Close()
 
 	categories := []string{
-		"animals", "brain-teasers", "celebrities", "entertainment", "for-kids", "general", "geography", "history", "hobbies", "humanities", "literature", "movies", "music", "newest", "people", "rated", "religion-faith", "science-technology", "sports", "television", "video-games", "world",
+		"animals",
+		"brain-teasers",
+		"celebrities",
+		"entertainment",
+		"for-kids",
+		"general",
+		"geography",
+		"history",
+		"hobbies",
+		"humanities",
+		"literature",
+		"movies",
+		"music",
+		"newest",
+		"people",
+		"rated",
+		"religion-faith",
+		"science-technology",
+		"sports",
+		"television",
+		"video-games",
+		"world",
 	}
 
 	questionsByCategory := map[string]Stats{}
@@ -124,11 +145,23 @@ func main() {
 		totalOverallQuestions += numTotal
 	}
 
-	for category, score := range questionsByCategory {
-		fmt.Printf("%s: %f\n", category, score.CorrectPercentage)
+	fmt.Println("Category\tCorrect\tTotal\tPercentage")
+	for _, category := range categories {
+		fmt.Printf(
+			"%s\t%d\t%d\t%f\n",
+			category,
+			questionsByCategory[category].TotalCorrect,
+			questionsByCategory[category].TotalQuestions,
+			questionsByCategory[category].CorrectPercentage,
+		)
 	}
 
-	fmt.Printf("Overall: %f\n", float32(totalOverallCorrect)/float32(totalOverallQuestions))
+	fmt.Printf(
+		"overall\t%d\t%d\t%f\n",
+		totalOverallCorrect,
+		totalOverallQuestions,
+		float32(totalOverallCorrect)/float32(totalOverallQuestions),
+	)
 }
 
 func ParseQuestions(rawText io.Reader) []Question {
