@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PullRequestInc/go-gpt3"
 	"github.com/dgraph-io/badger/v3"
+	gogpt "github.com/sashabaranov/go-gpt3"
 	"golang.org/x/time/rate"
 )
 
@@ -211,26 +211,21 @@ func ParseQuestions(rawText io.Reader) []Question {
 
 func AskGPT3Question(q Question) string {
 	apiKey := os.Getenv("OPENAI_SECRET_KEY")
-	client := gpt3.NewClient(
-		apiKey,
-		gpt3.WithDefaultEngine(gpt3.TextDavinci003Engine),
-		gpt3.WithTimeout(10*time.Minute),
-	)
+	client := gogpt.NewClient(apiKey)
 
 	questionTemplate := fmt.Sprintf(
-		`I am a highly intelligent multiple choice trivia bot. You are given a multiple choice question. You must choose the correct answer from one of answers. Only include the answer and nothing else.
-Question:
+		`Question:
 %s
 
 Possible answers:
 %s
 
-Your answer:`,
+`,
 		q.Question,
 		strings.Join(q.PossibleAnswers, "\n"),
 	)
 
-	var resp *gpt3.CompletionResponse
+	var resp gogpt.ChatCompletionResponse
 	var err error
 
 	// retry up to 30 times
@@ -239,14 +234,53 @@ Your answer:`,
 		if attempts > 30 {
 			panic(err)
 		}
-		resp, err = client.Completion(context.Background(), gpt3.CompletionRequest{
-			Prompt:           []string{questionTemplate},
-			Temperature:      gpt3.Float32Ptr(0.0),
-			MaxTokens:        gpt3.IntPtr(100),
-			TopP:             gpt3.Float32Ptr(1.0),
-			FrequencyPenalty: 0.0,
-			PresencePenalty:  0.0,
-			N:                gpt3.IntPtr(1),
+		resp, err = client.CreateChatCompletion(context.Background(), gogpt.ChatCompletionRequest{
+			Temperature: 0,
+			Model:       gogpt.GPT3Dot5Turbo,
+			Messages: []gogpt.ChatCompletionMessage{
+				{
+					Role: "system",
+					Content: `You are a trivia assistant. I will ask you a multiple choice question and you will answer it.
+
+You will be given a question and then you will be presented with possible
+answers to choose from. If you're not sure of the answer, make your
+best guess and pick one of the answers.
+
+Follow these instructions:
+1. Think out loud, step by step, as you solve the question
+2. Use the "Answer:" prompt to answer the question
+3. Insert two blank lines to separate your answer from your explanation
+4. Write one of your answers and write it exactly character for character as it appears in the list of possible answers
+`,
+				},
+				{
+					Role: "user",
+					Content: `Question:
+Which one of these sea mammals is not in the endangered species lists?
+
+Possible answers:
+Fin Whale
+Pilot whale
+Blue Whale
+Humpback Whale
+
+`,
+				},
+				{
+					Role: "assistant",
+					Content: `Thinking out loud:
+The Humpback Whale has a large population and is not endangered.
+
+Answer:
+
+
+Humpback Whale`,
+				},
+				{
+					Role:    "user",
+					Content: questionTemplate,
+				},
+			},
 		})
 		attempts++
 
@@ -257,6 +291,11 @@ Your answer:`,
 		}
 	}
 
-	guess := strings.TrimSpace(resp.Choices[0].Text)
+	fmt.Println(resp.Choices[0].Message.Content)
+
+	// Split guess by line and take the last line
+	guessLines := strings.Split(resp.Choices[0].Message.Content, "\n")
+	guess := strings.TrimSpace(guessLines[len(guessLines)-1])
+
 	return guess
 }
