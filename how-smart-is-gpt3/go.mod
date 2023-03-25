@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/dgraph-io/badger/v3 v3.2103.5
-	github.com/sashabaranov/go-gpt3 v1.3.1
+	github.com/sashabaranov/go-openai v1.5.2
 	golang.org/x/time v0.3.0
 )
 

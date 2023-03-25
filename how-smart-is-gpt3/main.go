@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger/v3"
-	gogpt "github.com/sashabaranov/go-gpt3"
+	"github.com/sashabaranov/go-openai"
 	"golang.org/x/time/rate"
 )
 
@@ -112,11 +112,10 @@ func main() {
 			}
 			numTotal++
 
-			fmt.Printf("%s was ", q.Question)
 			if q.CorrectAnswer == guess {
-				fmt.Printf("correct.")
+				fmt.Printf("Correct.")
 			} else {
-				fmt.Printf("incorrect.")
+				fmt.Printf("Incorrect.")
 			}
 			fmt.Printf(
 				" You guessed \"%s\". The correct answer was \"%s\".\n",
@@ -210,8 +209,8 @@ func ParseQuestions(rawText io.Reader) []Question {
 }
 
 func AskGPT3Question(q Question) string {
-	apiKey := os.Getenv("OPENAI_SECRET_KEY")
-	client := gogpt.NewClient(apiKey)
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	client := openai.NewClient(apiKey)
 
 	questionTemplate := fmt.Sprintf(
 		`Question:
@@ -225,7 +224,7 @@ Possible answers:
 		strings.Join(q.PossibleAnswers, "\n"),
 	)
 
-	var resp gogpt.ChatCompletionResponse
+	var resp openai.ChatCompletionResponse
 	var err error
 
 	// retry up to 30 times
@@ -234,47 +233,50 @@ Possible answers:
 		if attempts > 30 {
 			panic(err)
 		}
-		resp, err = client.CreateChatCompletion(context.Background(), gogpt.ChatCompletionRequest{
+		resp, err = client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
 			Temperature: 0,
-			Model:       gogpt.GPT3Dot5Turbo,
-			Messages: []gogpt.ChatCompletionMessage{
+			Model:       openai.GPT4,
+			Messages: []openai.ChatCompletionMessage{
 				{
-					Role: "system",
-					Content: `You are a trivia assistant. I will ask you a multiple choice question and you will answer it.
-
-You will be given a question and then you will be presented with possible
+					Role:    "system",
+					Content: `You are a knowledge assistant. I will ask you a multiple choice question and you will answer it.`,
+				},
+				{
+					Role: "user",
+					Content: `You will be given a question and then you will be presented with possible
 answers to choose from. If you're not sure of the answer, make your
 best guess and pick one of the answers.
 
 Follow these instructions:
-1. Think out loud, step by step, as you solve the question
-2. Use the "Answer:" prompt to answer the question
-3. Insert two blank lines to separate your answer from your explanation
-4. Write one of your answers and write it exactly character for character as it appears in the list of possible answers
+- Think out loud, step by step
+- Insert two blank lines to separate your answer from your explanation
+- Write one of your answers and write it exactly character for character as it appears in the list of possible answers
 `,
 				},
 				{
 					Role: "user",
 					Content: `Question:
-Which one of these sea mammals is not in the endangered species lists?
+What language can Harry Potter speak?
 
 Possible answers:
-Fin Whale
-Pilot whale
-Blue Whale
-Humpback Whale
-
+Goblin
+English
+Mermish
+Parseltounge
 `,
 				},
 				{
 					Role: "assistant",
 					Content: `Thinking out loud:
-The Humpback Whale has a large population and is not endangered.
+Harry never has a need to speak goblin, so I can eliminate that answer. English
+is the known language that he speaks which leaves mermish and parseltounge.
+Mermish would be the language that merpeople speak, so I can eliminate that
+answer. That leaves parseltounge as the correct answer.
 
 Answer:
 
 
-Humpback Whale`,
+Parseltounge`,
 				},
 				{
 					Role:    "user",
@@ -291,6 +293,10 @@ Humpback Whale`,
 		}
 	}
 
+	fmt.Println("=========================================")
+	fmt.Println()
+	fmt.Println()
+	fmt.Println(questionTemplate)
 	fmt.Println(resp.Choices[0].Message.Content)
 
 	// Split guess by line and take the last line
