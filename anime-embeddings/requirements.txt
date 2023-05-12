@@ -1,0 +1,3 @@
+cohere==4.4.1
+datasets==2.12.0
+torch==2.0.1
