@@ -1,0 +1,32 @@
+allow_k8s_contexts("kind-rrl")
+
+load('ext://restart_process', 'docker_build_with_restart')
+
+k8s_yaml(helm(
+  './helm/metrics-server',
+  name='metrics-server',
+))
+
+k8s_yaml(helm(
+  './helm/prometheus',
+  name='prometheus',
+))
+
+k8s_yaml(helm(
+  './helm/prometheus-adapter',
+  name='prometheus-adapter',
+))
+
+docker_build('proxy', '.',
+  dockerfile='./Dockerfile',
+  entrypoint='/go/bin/proxy',
+)
+
+docker_build('inferencer', '.',
+  dockerfile='./Dockerfile',
+  entrypoint='/go/bin/inferencer',
+)
+
+k8s_yaml('./k8s.yaml')
+k8s_resource('proxy', port_forwards=['8080'])
+k8s_resource('prometheus-server', port_forwards=['9090'])

@@ -1,0 +1,11 @@
+---
+apiVersion: ctlptl.dev/v1alpha1
+kind: Registry
+name: kind-rrl-registry
+port: 5005
+---
+apiVersion: ctlptl.dev/v1alpha1
+kind: Cluster
+product: kind
+name: kind-rrl
+registry: kind-rrl-registry

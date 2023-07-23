@@ -1,0 +1,89 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: proxy
+  template:
+    metadata:
+      labels:
+        app: proxy
+    spec:
+      containers:
+        - name: proxy
+          image: proxy
+          ports:
+            - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inferencer
+spec:
+  selector:
+    matchLabels:
+      app: inferencer
+  template:
+    metadata:
+      labels:
+        app: inferencer
+      annotations:
+         prometheus.io/path: "/metrics"
+         prometheus.io/port: "8080"
+         prometheus.io/scrape: "true"
+    spec:
+      containers:
+        - name: inferencer
+          image: inferencer
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            periodSeconds: 10
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: inferencer
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: inferencer
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 0
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+  minReplicas: 3
+  maxReplicas: 15
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: queue_depth_average
+      target:
+        type: AverageValue
+        averageValue: 70
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inferencer
+spec:
+  selector:
+    app: inferencer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
