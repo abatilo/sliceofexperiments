@@ -154,7 +154,7 @@ packaging==23.0
     #   tensorflow
 pandas==1.5.3
     # via ray
-pillow==9.4.0
+pillow==10.0.1
     # via
     #   imageio
     #   matplotlib
@@ -194,7 +194,9 @@ pywavelets==1.4.1
 pyyaml==6.0
     # via ray
 ray[rllib]==2.2.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   ray
 requests==2.28.2
     # via
     #   ray
