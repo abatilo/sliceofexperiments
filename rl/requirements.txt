@@ -255,7 +255,7 @@ urllib3==1.26.15
     # via requests
 virtualenv==20.21.0
     # via ray
-werkzeug==2.2.3
+werkzeug==3.0.1
     # via tensorboard
 wheel==0.40.0
     # via
