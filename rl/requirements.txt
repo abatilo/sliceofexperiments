@@ -251,7 +251,7 @@ typing-extensions==4.5.0
     #   gymnasium
     #   rich
     #   tensorflow
-urllib3==1.26.15
+urllib3==1.26.18
     # via requests
 virtualenv==20.21.0
     # via ray
