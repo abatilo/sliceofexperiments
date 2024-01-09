@@ -48,7 +48,7 @@ filelock==3.10.6
     #   virtualenv
 flatbuffers==23.3.3
     # via tensorflow
-fonttools==4.39.2
+fonttools==4.43.0
     # via matplotlib
 frozenlist==1.3.3
     # via
