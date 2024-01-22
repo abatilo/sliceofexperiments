@@ -154,7 +154,7 @@ packaging==23.0
     #   tensorflow
 pandas==1.5.3
     # via ray
-pillow==10.0.1
+pillow==10.2.0
     # via
     #   imageio
     #   matplotlib
